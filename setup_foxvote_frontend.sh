@@ -110,6 +110,7 @@ EOL
 echo "5. Aktiverer nettsiden..."
 # Fjern default nginx-konfigurasjoner
 rm -f /etc/nginx/sites-enabled/default
+rm -f /etc/nginx/sites-available/default
 rm -f /etc/nginx/sites-enabled/foxvote-api 2>/dev/null || true
 
 # Aktiver frontend-konfigurasjonen
