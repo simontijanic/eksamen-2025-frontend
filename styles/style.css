@@ -1,0 +1,12 @@
+/* Ekstra styling for fox-bilder og toppliste */
+.fox-img {
+    max-height: 300px;
+    object-fit: cover;
+}
+#toplistContainer img {
+    border: 2px solid #ffc107;
+    margin-right: 4px;
+}
+#toastNotification {
+    min-width: 250px;
+}
