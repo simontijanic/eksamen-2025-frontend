@@ -120,9 +120,16 @@ fi
 
 # 7. Konfigurer brannmur
 echo "7. Konfigurerer brannmur..."
+# Fjern gamle regler for å sikre ren oppsett
+ufw --force reset
 ufw --force enable
-ufw allow 'Nginx Full'
-ufw allow OpenSSH
+ufw allow 80/tcp    # HTTP (Nginx)
+ufw allow 22/tcp    # SSH
+ufw default deny incoming
+ufw default allow outgoing
+
+# Vis status
+ufw status verbose
 
 echo
 echo "=== Setup fullført! ==="
