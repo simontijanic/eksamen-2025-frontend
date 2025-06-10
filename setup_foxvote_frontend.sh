@@ -84,15 +84,6 @@ server {
         try_files /documentation.html =404;
     }
 
-    # API proxy (hvis API kjører på samme server)
-    location /api/ {
-        proxy_pass http://localhost:3000/api/;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-
     # Sikkerhetstiltak
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;

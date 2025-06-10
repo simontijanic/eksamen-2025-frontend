@@ -1,5 +1,5 @@
 // API-endepunkt til backend
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'http://10.12.87.101/api';
 
 // Hent HTML-elementer fra siden
 const foxImage1 = document.getElementById('foxImage1');
