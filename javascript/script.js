@@ -115,25 +115,39 @@ async function fetchStats() {
             leaderMessage.textContent = 'Ingen stemmer registrert enda.';
         }
         toplistContainer.innerHTML = '';
-        // Vis toppliste med bilde og stemmetall
-        stats.toplist.slice(0, 5).forEach(fox => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'd-flex flex-column align-items-center';
+        // Vis toppliste med bilde og stemmetall, penere kort og highlight for leder
+        stats.toplist.slice(0, 5).forEach((fox, idx) => {
+            const card = document.createElement('div');
+            card.className = 'fox-card d-flex flex-column align-items-center position-relative';
+            if (idx === 0) card.classList.add('fox-leader-card');
+            // Crown for leader
+            if (idx === 0) {
+                const crown = document.createElement('span');
+                crown.className = 'fox-leader-crown';
+                crown.innerHTML = '👑';
+                card.appendChild(crown);
+            }
             const img = document.createElement('img');
             img.src = `https://randomfox.ca/images/${fox.imageId}.jpg`;
             img.alt = `Rev ${fox.imageId} med ${fox.votes} stemmer`;
             img.title = `Rev ${fox.imageId}: ${fox.votes} stemmer`;
             img.className = 'rounded border';
-            img.setAttribute('aria-label', `Rev ${fox.imageId}, ${fox.votes} stemmer`); // Added aria-label for accessibility
+            img.setAttribute('aria-label', `Rev ${fox.imageId}, ${fox.votes} stemmer`);
             img.style.width = '80px';
             img.style.height = '80px';
             img.style.objectFit = 'cover';
+            card.appendChild(img);
+            // Fox ID
+            const foxIdLabel = document.createElement('div');
+            foxIdLabel.className = 'fw-semibold mt-1';
+            foxIdLabel.textContent = `Rev ${fox.imageId}`;
+            card.appendChild(foxIdLabel);
+            // Votes badge
             const badge = document.createElement('span');
             badge.className = 'badge bg-primary mt-1';
             badge.textContent = `Stemmer: ${fox.votes}`;
-            wrapper.appendChild(img);
-            wrapper.appendChild(badge);
-            toplistContainer.appendChild(wrapper);
+            card.appendChild(badge);
+            toplistContainer.appendChild(card);
         });
     } catch (error) {
         console.error("Error fetching stats:", error); // Log error
