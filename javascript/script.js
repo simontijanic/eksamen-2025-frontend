@@ -43,7 +43,7 @@ async function displayNewFoxes() {
         foxImage2.src = images.fox2.url;
         foxImage2.dataset.foxId = images.fox2.id;
         foxImage2.alt = "Bilde av en annen tilfeldig rev"; // Added alt text
-        await updateFoxVotes();         // Hent stemmer for disse bildene
+       // await updateFoxVotes();         // Hent stemmer for disse bildene
     } catch (error) {
         feedbackArea.textContent = 'Kunne ikke laste inn nye rever. Sjekk nettverkstilkoblingen og prøv igjen senere.'; // More user-friendly error
         feedbackArea.classList.remove('d-none');
@@ -90,7 +90,7 @@ async function vote(foxId) {
             voteButton1.disabled = false;
             voteButton2.disabled = false;
         }, COOLDOWN_MS);
-        await updateFoxVotes();// Oppdater stemmetall direkte etter stemme
+     //   await updateFoxVotes();// Oppdater stemmetall direkte etter stemme
     } catch (error) {
         feedbackArea.textContent = `Feil: ${error.message}. Prøv igjen.`;
         feedbackArea.classList.remove('d-none', 'alert-success');
