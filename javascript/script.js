@@ -17,8 +17,6 @@ let currentFox1Id = null;
 let currentFox2Id = null;
 let voteCooldown = false;
 const COOLDOWN_MS = 3000; // 3 sekunder mellom hver stemme
-let fox1Votes = 0;
-let fox2Votes = 0;
 
 // Hent to tilfeldige rever fra backend
 async function fetchRandomFoxImageUrls() {
@@ -55,26 +53,8 @@ async function displayNewFoxes() {
 
 // Hent og vis stemmetall for de to viste revene
 async function updateFoxVotes() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/stats`);
-        if (!response.ok) throw new Error('Kunne ikke hente statistikk. Status: ' + response.status); // Added status code
-        const stats = await response.json();
-        fox1Votes = 0;
-        fox2Votes = 0;
-        if (stats.toplist && Array.isArray(stats.toplist)) {
-            for (const fox of stats.toplist) {
-                if (fox.imageId === currentFox1Id) fox1Votes = fox.votes;
-                if (fox.imageId === currentFox2Id) fox2Votes = fox.votes;
-            }
-        }
-        document.getElementById('fox1Votes').textContent = fox1Votes;
-        document.getElementById('fox2Votes').textContent = fox2Votes;
-    } catch (e) {
-        console.error("Error updating fox votes:", e); // Log error
-        document.getElementById('fox1Votes').textContent = '?';
-        document.getElementById('fox2Votes').textContent = '?';
-        // Optionally, display a more user-friendly message in the UI for vote count errors
-    }
+    // Funksjonen beholdes i tilefelle men fjerne stemmene på de to tilfeldige revene
+    return;
 }
 
 // Stem på en rev
