@@ -86,6 +86,29 @@
             </div>
         </section>
 
+        <section id="databasesvakheter" class="mb-5">
+            <h2>Databasesvakheter og forbedringer</h2>
+            <p><strong>Svakheter i nåværende løsning:</strong></p>
+            <ul>
+                <li>Ingen brukerpålogging – samme person kan anmelde samme vits mange ganger.</li>
+                <li>Ingen sjekk på om vitsen faktisk finnes i ekstern API før anmeldelse lagres.</li>
+                <li>Kommentarer valideres kun på lengde, ikke innhold (f.eks. banning).</li>
+                <li>Ingen indeks på <code>jokeId</code> – kan bli tregt ved mange anmeldelser.</li>
+                <li>Man kan ikke hente ut alle anmeldelser for en vits (kun snitt og antall vises).</li>
+                <li>Ingen mulighet for å trekke tilbake eller slette en anmeldelse.</li>
+            </ul>
+            <p><strong>Forslag til forbedringer:</strong></p>
+            <ul>
+                <li>Legg til brukersystem slik at én bruker kun kan anmelde hver vits én gang.</li>
+                <li>Valider at vitsen finnes i ekstern API før anmeldelse lagres.</li>
+                <li>Bedre validering av kommentarer (lengde, språk, evt. banning-filter).</li>
+                <li>Legg til indeks på <code>jokeId</code> i databasen for raskere oppslag.</li>
+                <li>Lag et endepunkt for å hente ut alle anmeldelser for en vits (for admin/læring).</li>
+                <li>Implementer "soft delete" (f.eks. <code>deleted: true</code>) for å kunne trekke tilbake anmeldelser.</li>
+            </ul>
+            <p><em>Forklaring:</em> Dagens løsning er enkel og lett å forstå, men ikke robust mot juks eller misbruk. I en ekte applikasjon bør man sikre at dataene er riktige, at én bruker ikke kan stemme mange ganger, og at systemet tåler mange brukere uten å bli tregt. Indekser og autentisering er viktige verktøy for dette.</p>
+        </section>
+
         <footer class="pt-3 mt-4 text-muted border-top">
             &copy; 2025 Joke Review
         </footer>
