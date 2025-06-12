@@ -1,11 +1,16 @@
 // API-endepunkt til backend
-const API_BASE_URL = 'http://10.12.87.101/api';
+//const API_BASE_URL = 'http://10.12.87.101/api';
+const API_BASE_URL = 'http://localhost:3000/api';
 
 // Hent HTML-elementer fra siden
-const foxImage1 = document.getElementById('foxImage1');
-const foxImage2 = document.getElementById('foxImage2');
-const voteButton1 = document.getElementById('voteButton1');
-const voteButton2 = document.getElementById('voteButton2');
+const jokeSetup = document.getElementById('jokeSetup');
+const jokePunchline = document.getElementById('jokePunchline');
+const reviewSection = document.getElementById('reviewSection');
+const starRating = document.getElementById('starRating');
+const reviewComment = document.getElementById('reviewComment');
+const submitReviewBtn = document.getElementById('submitReviewBtn');
+const averageRating = document.getElementById('averageRating');
+const newJokeBtn = document.getElementById('newJokeBtn');
 const feedbackArea = document.getElementById('feedbackArea');
 const leaderMessage = document.getElementById('leaderMessage');
 const toplistContainer = document.getElementById('toplistContainer');
@@ -13,93 +18,94 @@ const toastNotification = document.getElementById('toastNotification');
 const toastBody = toastNotification.querySelector('.toast-body');
 
 // Variabler for å holde styr på hvilke rever som vises og cooldown
-let currentFox1Id = null;
-let currentFox2Id = null;
+let currentJoke = null;
+let reviewSubmitted = false;
 let voteCooldown = false;
 const COOLDOWN_MS = 3000; // 3 sekunder mellom hver stemme
 
-// Hent to tilfeldige rever fra backend
-async function fetchRandomFoxImageUrls() {
-    try { // Added try-catch for network/server errors
-        const response = await fetch(`${API_BASE_URL}/images`);
-        if (!response.ok) throw new Error('Kunne ikke hente bilder fra server. Status: ' + response.status); // Added status code to error
-        return await response.json();
-    } catch (error) {
-        console.error("Error fetching fox images:", error); // Log error to console
-        throw error; // Re-throw to be caught by displayNewFoxes
+function renderStars(selected) {
+    starRating.innerHTML = '';
+    for (let i = 1; i <= 5; i++) {
+        const star = document.createElement('span');
+        star.className = 'star';
+        star.textContent = i <= selected ? '★' : '☆';
+        star.style.fontSize = '2rem';
+        star.style.cursor = 'pointer';
+        star.style.color = '#ffc107';
+        star.addEventListener('click', () => {
+            renderStars(i);
+            starRating.dataset.selected = i;
+        });
+        starRating.appendChild(star);
     }
+    starRating.dataset.selected = selected;
 }
 
-// Vis to nye rever og oppdater stemmetall
-async function displayNewFoxes() {
-    feedbackArea.classList.add('d-none');
+// Hent en tilfeldig vits fra backend
+async function fetchJoke() {
+    jokeSetup.textContent = 'Laster vits...';
+    jokePunchline.textContent = '';
+    averageRating.textContent = '';
+    reviewComment.value = '';
+    renderStars(0);
+    reviewSection.classList.remove('d-none');
+    submitReviewBtn.disabled = false;
+    newJokeBtn.classList.add('d-none');
+    reviewSubmitted = false;
     try {
-        const images = await fetchRandomFoxImageUrls();
-        currentFox1Id = images.fox1.id;
-        foxImage1.src = images.fox1.url;
-        foxImage1.dataset.foxId = images.fox1.id;
-        foxImage1.alt = "Bilde av en tilfeldig rev"; // Added alt text
-        currentFox2Id = images.fox2.id;
-        foxImage2.src = images.fox2.url;
-        foxImage2.dataset.foxId = images.fox2.id;
-        foxImage2.alt = "Bilde av en annen tilfeldig rev"; // Added alt text
-       // await updateFoxVotes();         // Hent stemmer for disse bildene
-    } catch (error) {
-        feedbackArea.textContent = 'Kunne ikke laste inn nye rever. Sjekk nettverkstilkoblingen og prøv igjen senere.'; // More user-friendly error
-        feedbackArea.classList.remove('d-none');
-        feedbackArea.classList.replace('alert-success', 'alert-danger');
+        const res = await fetch(`${API_BASE_URL}/joke`);
+        if (!res.ok) throw new Error('Kunne ikke hente vits');
+        currentJoke = await res.json();
+        jokeSetup.textContent = currentJoke.setup;
+        jokePunchline.textContent = currentJoke.punchline;
+        fetchAverage(currentJoke.id);
+    } catch (e) {
+        jokeSetup.textContent = 'Kunne ikke hente vits.';
     }
 }
 
-// Hent og vis stemmetall for de to viste revene
-async function updateFoxVotes() {
-    // Funksjonen beholdes i tilefelle men fjerne stemmene på de to tilfeldige revene
-    return;
+// Hent og vis gjennomsnittlig vurdering for en vits
+async function fetchAverage(jokeId) {
+    try {
+        const res = await fetch(`${API_BASE_URL}/joke/average/${jokeId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.average) {
+            averageRating.textContent = `Gjennomsnittlig rating: ${data.average.toFixed(2)} (${data.count} anmeldelser)`;
+        } else {
+            averageRating.textContent = 'Ingen anmeldelser ennå.';
+        }
+    } catch {}
 }
 
-// Stem på en rev
-async function vote(foxId) {
-    if (voteCooldown) {
-        feedbackArea.textContent = `Du må vente litt før du kan stemme igjen!`;
-        feedbackArea.classList.remove('d-none', 'alert-success');
-        feedbackArea.classList.add('alert-warning');
+// Send inn anmeldelse for en vits
+submitReviewBtn.addEventListener('click', async () => {
+    const stars = Number(starRating.dataset.selected);
+    const comment = reviewComment.value;
+    if (!stars) {
+        averageRating.textContent = 'Velg antall stjerner før du sender!';
         return;
     }
-    voteCooldown = true;
-    voteButton1.disabled = true;
-    voteButton2.disabled = true;
-    feedbackArea.classList.add('d-none');
+    submitReviewBtn.disabled = true;
     try {
-        const response = await fetch(`${API_BASE_URL}/vote`, {
+        const res = await fetch(`${API_BASE_URL}/joke/review`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imageId: foxId.toString() })
+            body: JSON.stringify({ jokeId: currentJoke.id, stars, comment })
         });
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: 'Ukjent feil ved stemming. Serveren svarte ikke som forventet.' })); // Improved error handling for non-JSON response
-            throw new Error(errorData.message || 'Stemmegivning feilet. Status: ' + response.status); // Added status code
+        const data = await res.json();
+        if (res.ok) {
+            averageRating.textContent = `Takk for anmeldelsen! Ny gjennomsnitt: ${data.average ? data.average.toFixed(2) : 'N/A'} (${data.count} anmeldelser)`;
+            reviewSection.classList.add('d-none');
+            newJokeBtn.classList.remove('d-none');
+            reviewSubmitted = true;
+        } else {
+            averageRating.textContent = data.message || 'Noe gikk galt.';
         }
-        feedbackArea.textContent = `Du stemte på rev med ID ${foxId}. Takk for stemmen!`; // Clarified which fox was voted for
-        feedbackArea.classList.remove('d-none', 'alert-danger', 'alert-warning');
-        feedbackArea.classList.add('alert-success');
-        await fetchStats(); // Oppdater statistikk
-        setTimeout(() => {
-            displayNewFoxes(); // Vis nye rever etter cooldown
-            feedbackArea.classList.add('d-none');
-            voteCooldown = false;
-            voteButton1.disabled = false;
-            voteButton2.disabled = false;
-        }, COOLDOWN_MS);
-     //   await updateFoxVotes();// Oppdater stemmetall direkte etter stemme
-    } catch (error) {
-        feedbackArea.textContent = `Feil: ${error.message}. Prøv igjen.`;
-        feedbackArea.classList.remove('d-none', 'alert-success');
-        feedbackArea.classList.add('alert-danger');
-        voteCooldown = false;
-        voteButton1.disabled = false;
-        voteButton2.disabled = false;
+    } catch {
+        averageRating.textContent = 'Noe gikk galt.';
     }
-}
+});
 
 // Hent og vis statistikk og toppliste
 async function fetchStats() {
@@ -162,21 +168,14 @@ function showToast(message) {
     toast.show();
 }
 
-// Koble knapper til stemme-funksjonen
-voteButton1.addEventListener('click', () => {
-    if (foxImage1.dataset.foxId) {
-        vote(foxImage1.dataset.foxId);
-    }
-});
-voteButton2.addEventListener('click', () => {
-    if (foxImage2.dataset.foxId) {
-        vote(foxImage2.dataset.foxId);
-    }
-});
-
 // Kjør når siden lastes
-// Viser to rever og statistikk
-document.addEventListener('DOMContentLoaded', () => {
-    displayNewFoxes();
-    fetchStats();
+function setupJokePage() {
+    fetchJoke();
+}
+
+document.addEventListener('DOMContentLoaded', setupJokePage);
+
+// Koble "Ny vits"-knappen til å hente ny vits
+newJokeBtn.addEventListener('click', () => {
+    fetchJoke();
 });
