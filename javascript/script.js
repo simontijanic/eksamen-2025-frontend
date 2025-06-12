@@ -54,13 +54,21 @@ async function fetchJoke() {
     reviewSubmitted = false;
     try {
         const res = await fetch(`${API_BASE_URL}/joke`);
-        if (!res.ok) throw new Error('Kunne ikke hente vits');
+        if (!res.ok) throw new Error('Kunne ikke hente vits (serverfeil)');
         currentJoke = await res.json();
+        if (!currentJoke || !currentJoke.setup || !currentJoke.punchline) {
+            throw new Error('Ingen vits mottatt fra server.');
+        }
         jokeSetup.textContent = currentJoke.setup;
         jokePunchline.textContent = currentJoke.punchline;
         fetchAverage(currentJoke.id);
     } catch (e) {
         jokeSetup.textContent = 'Kunne ikke hente vits.';
+        jokePunchline.textContent = '';
+        averageRating.textContent = '';
+        feedbackArea.textContent = e.message || 'Nettverksfeil eller serveren svarte ikke.';
+        feedbackArea.classList.remove('d-none', 'alert-success');
+        feedbackArea.classList.add('alert-danger');
     }
 }
 
@@ -68,14 +76,16 @@ async function fetchJoke() {
 async function fetchAverage(jokeId) {
     try {
         const res = await fetch(`${API_BASE_URL}/joke/average/${jokeId}`);
-        if (!res.ok) return;
+        if (!res.ok) throw new Error('Kunne ikke hente gjennomsnittlig vurdering.');
         const data = await res.json();
         if (data.average) {
             averageRating.textContent = `Gjennomsnittlig rating: ${data.average.toFixed(2)} (${data.count} anmeldelser)`;
         } else {
             averageRating.textContent = 'Ingen anmeldelser ennå.';
         }
-    } catch {}
+    } catch (e) {
+        averageRating.textContent = e.message || 'Feil ved henting av vurdering.';
+    }
 }
 
 // Send inn anmeldelse for en vits
@@ -99,11 +109,18 @@ submitReviewBtn.addEventListener('click', async () => {
             reviewSection.classList.add('d-none');
             newJokeBtn.classList.remove('d-none');
             reviewSubmitted = true;
+            feedbackArea.classList.add('d-none');
         } else {
             averageRating.textContent = data.message || 'Noe gikk galt.';
+            feedbackArea.textContent = data.message || 'Noe gikk galt ved innsending.';
+            feedbackArea.classList.remove('d-none', 'alert-success');
+            feedbackArea.classList.add('alert-danger');
         }
-    } catch {
+    } catch (e) {
         averageRating.textContent = 'Noe gikk galt.';
+        feedbackArea.textContent = e.message || 'Nettverksfeil eller serveren svarte ikke.';
+        feedbackArea.classList.remove('d-none', 'alert-success');
+        feedbackArea.classList.add('alert-danger');
     }
 });
 
